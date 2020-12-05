@@ -75,7 +75,7 @@ def render_mail(mail):
     message_content += f"To: [{', '.join([to.replace('{{display_name}}', 'YOU') for to in mail['to']])}]\n"
     message_content += f"Subject: {mail['subject']}\n"
     mail_content = mail['content']
-    for result in re.finditer(r'\[.*\]\((.*)\)', mail_content):
-        mail_content = mail_content.replace(result.groups(0)[0], f"https://dass.npst.no{result.groups(0)[0]}")
+    for result in re.finditer(r'(\[.*\]\((.*)\))', mail_content):
+        mail_content = mail_content.replace(result.groups(0)[0], f"https://dass.npst.no{result.groups(0)[1]}")
     message_content += mail_content
     return message_content
