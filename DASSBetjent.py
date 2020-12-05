@@ -139,12 +139,16 @@ class DASSBetjent(discord.Client):
                     'Du kan diskutere løsningene i <#652630061584875532>.'
                 )).delete(delay=5)
 
-        for possible in re.finditer(r"(?i)(PST|EGG){.*}", msg.content):
-            span = possible.span()
-            key_data = msg.content[span[0]:span[1]].upper()
-
+        if not os.path.exists("known_keys.txt"):
+            open("known_keys.txt", "w").close()
+        else:
             with open("known_keys.txt", "r") as fr:
                 known_keys = fr.read().split("\n")
+
+            for possible in re.finditer(r"(?i)(PST|EGG){.*}", msg.content):
+                span = possible.span()
+                key_data = msg.content[span[0]:span[1]].upper()
+
                 if hashlib.sha512(key_data.upper().encode()).hexdigest() in known_keys:
                     await msg.delete()
                     await msg.channel.send("Ikke del nøkler!")
