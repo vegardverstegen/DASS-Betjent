@@ -1,16 +1,20 @@
+import discord
 import re
 
-def format_display_name(display_name: str, illegal=['👉', '👑', ':crown:', ':point_right:']):
+
+def format_display_name(display_name: str, illegal_strings=('👉', '👑', ':crown:', ':point_right:')):
     formatted = display_name[:20]
     if len(display_name) > 20:
         formatted += '...'
-    for x in illegal:
-        formatted = formatted.replace(x, '💩')
+    for illegal_string in illegal_strings:
+        formatted = formatted.replace(illegal_string, '💩')
     return formatted
 
 
 def get_score_user_info(user, score_pos: int):
-    ret_str = f'#{score_pos+1} {format_display_name(user["display_name"])} - {int(user["challenges_solved"]) * 10} poeng'
+    formatted_name = format_display_name(user["display_name"])
+    points = int(user["challenges_solved"]) * 10
+    ret_str = f'#{score_pos+1} {formatted_name} - {points} poeng'
 
     if user["eggs_solved"] == "0":
         ret_str += '\n'
@@ -29,32 +33,39 @@ def get_max_score_users(score):
             return x
 
 
-def get_score(input_users=[]):
-    embed = discord.Embed(title='Poengoversikt', color=0x50bdfe)
+async def get_scoreboard_embed(scoreboard, input_users=()):
+    if scoreboard is None:
+        return discord.Embed(
+            title="Poengoversikt",
+            color=0xff0000,
+            description="Det oppsto en feil!\nKlarte ikke å hente scoreboardet."
+        )
 
-    score = get_scoreboard()
-    if not score:
-        embed.color = 0xff0000
-        embed.description = 'Det oppsto en feil!\nKlarte ikke å hente scoreboardet.'
-        return embed
-
-    for x, user in enumerate(score):
-        if input_users: 
+    embed_description = ""
+    embed_finished = False
+    scoreboard_users = 0
+    for x, user in enumerate(scoreboard):
+        if len(input_users) > 0:
             for input_user in input_users:
                 if input_user.lower() in user['display_name'].lower():
-                    embed.description += get_score_user_info(user, x)
-                    if x >= 15:
-                        embed.description += '...'
-                        return embed
+                    embed_description += get_score_user_info(user, x)
+                    scoreboard_users += 1
+                    if scoreboard_users >= 15:
+                        embed_description += '...'
+                        embed_finished = True
+                        break
         else:
-            embed.description += get_score_user_info(user, x)
-            if x >= 15:
-                max_score_users = get_max_score_users(score)
-                embed.description += f'...\n\n\n{max_score_users} alvebetjenter har maks poeng'
-                
-                return embed
-    
-    return embed
+            scoreboard_users += 1
+            embed_description += get_score_user_info(user, x)
+            if scoreboard_users >= 15:
+                max_score_users = get_max_score_users(scoreboard)
+                embed_description += f'...\n\n{max_score_users} alvebetjenter har maks poeng'
+
+                embed_finished = True
+
+        if embed_finished:
+            break
+    return discord.Embed(title='Poengoversikt', color=0x50bdfe, description=embed_description)
 
 
 def get_mail_attachments(mail):
