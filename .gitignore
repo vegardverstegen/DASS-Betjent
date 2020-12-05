@@ -1,3 +1,4 @@
 .idea/
 __pycache__/
 known_keys.txt
+servers.yaml

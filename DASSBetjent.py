@@ -192,8 +192,11 @@ class DASSBetjent(discord.Client):
                 )
 
     async def forward_mail(self, server_config, mail_inbox, silenced=False):
-        inbox_channel = await self.fetch_channel(server_config['inbox']) if 'inbox' in server_config else None
-        notif_channel = await self.fetch_channel(server_config['notif']) if 'notif' in server_config else None
+        try:
+            inbox_channel = await self.fetch_channel(server_config['inbox']) if 'inbox' in server_config else None
+            notif_channel = await self.fetch_channel(server_config['notif']) if 'notif' in server_config else None
+        except discord.errors.Forbidden:
+            return
 
         send_notification = False
         for mail in reversed(mail_inbox):

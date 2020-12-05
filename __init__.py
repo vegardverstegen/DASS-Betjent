@@ -1,9 +1,14 @@
 import DASSBetjent
 import logging
-import os
+import yaml
+#  import os
 
 if __name__ == "__main__":
     logging.basicConfig()
     logging.getLogger("DASSBetjent").setLevel(logging.DEBUG)
+
+    with open("keys.yaml", "r") as fr:
+        keys = yaml.load(fr, Loader=yaml.FullLoader)
+
     bot = DASSBetjent.DASSBetjent(prefix="+")
-    bot.run(os.environ["DASSTEST_DISCORD_TOKEN"], os.environ["DASSBETJENT_NPST_TOKEN"])
+    bot.run(keys["npst"], keys["discord"])
