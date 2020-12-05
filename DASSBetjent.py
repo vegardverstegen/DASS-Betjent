@@ -194,6 +194,8 @@ class DASSBetjent(discord.Client):
     async def forward_mail(self, server_config, mail_inbox, silenced=False):
         inbox_channel = await self.fetch_channel(server_config['inbox']) if 'inbox' in server_config else None
         notif_channel = await self.fetch_channel(server_config['notif']) if 'notif' in server_config else None
+
+        send_notification = False
         for mail in reversed(mail_inbox):
             mail_string = " ".join((mail['from'], ','.join(mail['to']), mail['sent'], mail['subject'], mail['content']))
             mail_hash = hashlib.md5(mail_string.encode()).hexdigest()
@@ -203,12 +205,14 @@ class DASSBetjent(discord.Client):
             else:
                 server_config['read_mail'] = []
 
+            send_notification = True
             if inbox_channel is not None:
                 server_config['read_mail'].append(mail_hash)
                 await inbox_channel.send(NPST_utils.render_mail(mail))
 
-                if not silenced and notif_channel is not None:
-                    await notif_channel.send(f"New mail in <#{server_config['inbox']}>")
+        if send_notification and not silenced:
+            if notif_channel is not None:
+                await notif_channel.send(f"New mail in <#{server_config['inbox']}>")
 
     @command(name="ping")
     async def ping_command(self, msg: discord.Message, _):
