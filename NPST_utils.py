@@ -1,5 +1,61 @@
 import re
 
+def format_display_name(display_name: str, illegal=['👉', '👑', ':crown:', ':point_right:']):
+    formatted = display_name[:20]
+    if len(display_name) > 20:
+        formatted += '...'
+    for x in illegal:
+        formatted = formatted.replace(x, '💩')
+    return formatted
+
+
+def get_score_user_info(user, score_pos: int):
+    ret_str = f'#{score_pos+1} {format_display_name(user["display_name"])} - {int(user["challenges_solved"]) * 10} poeng'
+
+    if user["eggs_solved"] == "0":
+        ret_str += '\n'
+    else:
+        ret_str += f' og ⭐ x {user["eggs_solved"]}\n'
+    
+    return ret_str
+
+
+def get_max_score_users(score):
+    highest_score = [score[0]["challenges_solved"], score[0]["eggs_solved"]]
+
+    for x, user in enumerate(score):
+        user_score = [user["challenges_solved"], user["eggs_solved"]]
+        if user_score != highest_score:
+            return x
+
+
+def get_score(input_users=[]):
+    embed = discord.Embed(title='Poengoversikt', color=0x50bdfe)
+
+    score = get_scoreboard()
+    if not score:
+        embed.color = 0xff0000
+        embed.description = 'Det oppsto en feil!\nKlarte ikke å hente scoreboardet.'
+        return embed
+
+    for x, user in enumerate(score):
+        if input_users: 
+            for input_user in input_users:
+                if input_user.lower() in user['display_name'].lower():
+                    embed.description += get_score_user_info(user, x)
+                    if x >= 15:
+                        embed.description += '...'
+                        return embed
+        else:
+            embed.description += get_score_user_info(user, x)
+            if x >= 15:
+                max_score_users = get_max_score_users(score)
+                embed.description += f'...\n\n\n{max_score_users} alvebetjenter har maks poeng'
+                
+                return embed
+    
+    return embed
+
 
 def get_mail_attachments(mail):
     files = []
