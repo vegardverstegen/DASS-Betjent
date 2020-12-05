@@ -217,7 +217,6 @@ class DASSBetjent(discord.Client):
     @command(name="ping")
     async def ping_command(self, msg: discord.Message, _):
         await msg.channel.send("Pong!")
-        raise ValueError()
 
     @command(name="score")
     async def score_command(self, msg: discord.Message, args):
