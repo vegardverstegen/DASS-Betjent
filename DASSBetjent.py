@@ -119,7 +119,10 @@ class DASSBetjent(discord.Client):
                 if self.commands[command_name]["info"]["admin_only"] and not msg.author.guild_permissions.administrator:
                     await msg.channel.send("No permission.")
                 else:
-                    await self.commands[command_name]["func"](msg, command_args)
+                    try:
+                        await self.commands[command_name]["func"](msg, command_args)
+                    except Exception as e:
+                        await msg.channel.send(f"`Noe gikk galt`")
 
     async def on_message_edit(self, _, after):
         await self.check_legality(after)
@@ -210,6 +213,7 @@ class DASSBetjent(discord.Client):
     @command(name="ping")
     async def ping_command(self, msg: discord.Message, _):
         await msg.channel.send("Pong!")
+        raise ValueError()
 
     @command(name="score")
     async def score_command(self, msg: discord.Message, args):
