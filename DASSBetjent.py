@@ -1,9 +1,12 @@
 import NPST_utils
 
+import hashlib
+import asyncio
 import aiohttp
 import logging
 import discord
 import json
+import re
 
 
 def command(name):
@@ -51,7 +54,7 @@ class DASSBetjent(discord.Client):
     async def on_ready(self):
         self.register_commands()
 
-        for guild in await self.fetch_guilds():
+        for guild in await self.fetch_guilds().flatten():
             guild: discord.Guild
             for channel in await guild.fetch_channels():
                 if type(channel) is discord.TextChannel:
@@ -64,6 +67,7 @@ class DASSBetjent(discord.Client):
         self.http_session = aiohttp.ClientSession()
 
     async def on_message(self, msg):
+        await self.check_legality(msg)
         if type(msg.channel) is discord.DMChannel:
             self.logger.info(f"DMChannel/{msg.channel.recipient.name} {msg.author}: {msg.content}")
         else:
@@ -77,7 +81,33 @@ class DASSBetjent(discord.Client):
                 await self.commands[command_name]["func"](msg, command_args)
 
     async def on_message_edit(self, before, after):
-        pass
+        await self.check_legality(after)
+
+    async def check_legality(self, msg: discord.Message):
+        if msg.channel.id in self.cryptobin_channels:
+            if "cryptobin.co" not in msg.content:
+                await msg.delete()
+                temp_msg = await msg.channel.send(
+                    f'Meldingen din ble slettet fra <#{msg.channel.id}>'
+                    'fordi den ikke inneholdt en cryptobin link.'
+                    'Du kan diskutere løsningene i <#652630061584875532>.'
+                )
+                await msg.delete(delay=5)
+
+        for possible in re.finditer(r"(?i)(PST|EGG){.*}", msg.content):
+            span = possible.span()
+            key_data = msg.content[span[0]:span[1]].upper()
+
+            with open("known_keys.txt", "r") as fr:
+                known_keys = fr.read().split("\n")
+                if hashlib.sha512(key_data.upper().encode()).hexdigest() in known_keys:
+                    await msg.delete()
+                    await msg.channel.send("Ikke del nøkler!")
+                    if not msg.author.guild_permissions.administrator:
+                        mod_channel = await self.fetch_channel(654781905660674049)
+                        await mod_channel.send(f"{msg.author} delte en nøkkel i <#{msg.channel.id}>")
+                else:
+                    await msg.add_reaction("😒")
 
     def register_commands(self):
         for attr in dir(self):
