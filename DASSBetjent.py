@@ -70,7 +70,9 @@ class DASSBetjent(discord.Client):
             logging.warning(f"Request failed for {method} {path}")
 
     async def on_ready(self):
+        self.logger.debug("Loading server configs")
         self.load_server_configs()
+        self.logger.debug("Registering commands")
         self.register_commands()
 
         self.logger.info(f"Bot started as {self.user}")
@@ -121,7 +123,7 @@ class DASSBetjent(discord.Client):
     async def check_legality(self, msg: discord.Message):
         if msg.author.bot:
             return
-        if msg.channel.name == "cryptobin":
+        if msg.channel.name.lower() == "cryptobins":
             if "cryptobin.co" not in msg.content:
                 await msg.delete()
                 await (await msg.channel.send(
@@ -168,7 +170,7 @@ class DASSBetjent(discord.Client):
             with open(self.server_config_file, "w") as fw:
                 yaml.dump(self.server_configs, fw)
 
-    async def autoupdate_inboxes(self, delay=15):
+    async def autoupdate_inboxes(self, delay=60):
         while True:
             await self.update_inboxes()
             await asyncio.sleep(delay)
