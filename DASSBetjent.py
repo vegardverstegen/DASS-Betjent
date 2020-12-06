@@ -123,7 +123,7 @@ class DASSBetjent(discord.Client):
     async def check_legality(self, msg: discord.Message):
         if msg.author.bot:
             return
-        if msg.channel.name.lower() == "cryptobins":
+        if type(msg.channel) is not discord.DMChannel and msg.channel.name.lower() == "cryptobins":
             if "cryptobin.co" not in msg.content:
                 await msg.delete()
                 await (await msg.channel.send(
