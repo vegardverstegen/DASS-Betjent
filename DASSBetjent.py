@@ -38,7 +38,6 @@ class DASSBetjent(discord.Client):
         self.logger = logging.getLogger("DASSBetjent")
         self.logger.debug("Initializing bot...")
 
-        self.cryptobin_channels = []
         self.commands = {}
 
         self.event(self.on_ready)
@@ -74,14 +73,6 @@ class DASSBetjent(discord.Client):
         self.load_server_configs()
         self.register_commands()
 
-        for guild in await self.fetch_guilds().flatten():
-            guild: discord.Guild
-            for channel in await guild.fetch_channels():
-                if type(channel) is discord.TextChannel:
-                    channel: discord.TextChannel
-                    if channel.name.lower() == "cryptobin":
-                        self.cryptobin_channels.append(channel.id)
-
         self.logger.info(f"Bot started as {self.user}")
 
         self.http_session = aiohttp.ClientSession()
@@ -101,7 +92,7 @@ class DASSBetjent(discord.Client):
                     self.server_configs = {}
         else:
             with open(self.server_config_file, "w") as fw:
-                yaml.dump({{}}, fw)
+                yaml.dump({}, fw)
             self.server_configs = {}
 
     async def on_message(self, msg):
@@ -130,7 +121,7 @@ class DASSBetjent(discord.Client):
     async def check_legality(self, msg: discord.Message):
         if msg.author.bot:
             return
-        if msg.channel.id in self.cryptobin_channels:
+        if msg.channel.name == "cryptobin":
             if "cryptobin.co" not in msg.content:
                 await msg.delete()
                 await (await msg.channel.send(
