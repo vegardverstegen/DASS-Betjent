@@ -59,7 +59,7 @@ async def get_scoreboard_embed(scoreboard, input_users=()):
             embed_description += get_score_user_info(user, x)
             if scoreboard_users >= 15:
                 max_score_users = get_max_score_users(scoreboard)
-                embed_description += f'...\n\n{max_score_users} alvebetjenter har maks poeng'
+                embed_description += f'...\n\n{max_score_users} alvebetjenter har maks poeng av totalt {len(scoreboard)} alvebetjenter'
 
                 embed_finished = True
 
