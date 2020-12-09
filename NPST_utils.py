@@ -36,7 +36,7 @@ def get_max_score_users(score):
 async def get_scoreboard_embed(scoreboard, input_users=()):
     if scoreboard is None:
         return discord.Embed(
-            title="Poengoversikt",
+            title="FEIL",
             color=0xff0000,
             description="Det oppsto en feil!\nKlarte ikke å hente scoreboardet."
         )
@@ -65,6 +65,10 @@ async def get_scoreboard_embed(scoreboard, input_users=()):
 
         if embed_finished:
             break
+
+    if embed_description == '':
+        return discord.Embed(title='FEIL', color=0x50bdfe, description='Brukeren ble ikke funnet!')
+
     return discord.Embed(title='Poengoversikt', color=0x50bdfe, description=embed_description)
 
 
