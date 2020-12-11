@@ -47,8 +47,6 @@ class DASSBetjent(discord.Client):
     async def api_request(self, path, method="GET"):
         full_path = path if path.startswith("http") else f"https://dass.npst.no/.netlify/functions/{path}"
         headers = {
-            "authorization": f"Bearer {self.npst_token}",
-            "credentials": "include",
             "referrer": "https://dass.npst.no/",
             "referrerPolicy": "strict-origin-when-cross-origin",
             "mode": "cors",
@@ -56,6 +54,10 @@ class DASSBetjent(discord.Client):
             "sec-fetch-mode": "cors",
             "sec-fetch-site": "same-origin",
         }
+        if self.profile is not None:
+            headers["authorization"] = f"Bearer {self.npst_token}"
+            headers["credentials"] = "include"
+
         resp = await self.http_session.request(method, full_path, headers=headers)
         resp_text = await resp.text()
         if resp.status == 200:
@@ -75,16 +77,19 @@ class DASSBetjent(discord.Client):
         self.logger.debug("Registering commands")
         self.register_commands()
 
-        self.logger.info(f"Bot started as {self.user}")
-
         self.http_session = aiohttp.ClientSession()
-
-        asyncio.create_task(self.autoupdate_inboxes())
-        asyncio.create_task(self.autosave_server_configs())
 
         self.profile = await self.api_request("profile")
 
-        self.logger.info(f"Bot started as [{self.user}] [{self.profile['display_name']}]")
+        if self.profile is not None:
+            assert self.profile["id"] == "6f90ff36-8c8a-4964-af2a-140a770fcc10", "SIGNED IN AS THE WRONG USER"
+
+            self.logger.info(f"Bot started as [{self.user}] [{self.profile['display_name']}]")
+            asyncio.create_task(self.autoupdate_inboxes())
+        else:
+            self.logger.info(f"Bot started as [{self.user}] [NO NPST ACCOUNT]")
+
+        asyncio.create_task(self.autosave_server_configs())
 
     def load_server_configs(self):
         if os.path.exists(self.server_config_file):
