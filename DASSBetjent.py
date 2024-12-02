@@ -45,9 +45,9 @@ class DASSBetjent(discord.Client):
         self.event(self.on_message)
         self.event(self.on_message_edit)
 
-    def api_request(self, path):
+    async def api_request(self, path):
         full_path = path if path.startswith("http") else f"https://intranett.npst.no/api/v1/{path}"
-        resp = requests.get(full_path)
+        resp = await requests.get(full_path)
         if resp.status_code == 200:
             return resp.json()
         else:
