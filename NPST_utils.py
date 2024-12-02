@@ -11,24 +11,20 @@ def format_display_name(display_name: str, illegal_strings=('👉', '👑', ':cr
     return formatted
 
 
-def get_score_user_info(user, score_pos: int):
-    formatted_name = format_display_name(user["display_name"])
-    points = int(user["challenges_solved"]) * 10
-    ret_str = f'#{score_pos+1} {formatted_name} - {points} poeng'
+def get_score_user_info(user):
+    formatted_name = format_display_name(user["name"])
+    points = int(user["score"])
+    score_pos = user["pos"]
+    ret_str = f'#{score_pos+1} {formatted_name} - {points} poeng\n'
 
-    if user["eggs_solved"] == "0":
-        ret_str += '\n'
-    else:
-        ret_str += f' og ⭐ x {user["eggs_solved"]}\n'
-    
     return ret_str
 
 
 def get_max_score_users(score):
-    highest_score = [score[0]["challenges_solved"], score[0]["eggs_solved"]]
+    highest_score = [score[0]["score"]]
 
     for x, user in enumerate(score):
-        user_score = [user["challenges_solved"], user["eggs_solved"]]
+        user_score = [user["score"]]
         if user_score != highest_score:
             return x
 
@@ -44,11 +40,11 @@ async def get_scoreboard_embed(scoreboard, input_users=()):
     embed_description = ""
     embed_finished = False
     scoreboard_users = 0
-    for x, user in enumerate(scoreboard):
+    for user in scoreboard:
         if len(input_users) > 0:
             for input_user in input_users:
-                if input_user.lower() in user['display_name'].lower():
-                    embed_description += get_score_user_info(user, x)
+                if input_user.lower() in user['name'].lower():
+                    embed_description += get_score_user_info(user)
                     scoreboard_users += 1
                     if scoreboard_users >= 15:
                         embed_description += '...'
@@ -56,7 +52,7 @@ async def get_scoreboard_embed(scoreboard, input_users=()):
                         break
         else:
             scoreboard_users += 1
-            embed_description += get_score_user_info(user, x)
+            embed_description += get_score_user_info(user)
             if scoreboard_users >= 15:
                 max_score_users = get_max_score_users(scoreboard)
                 embed_description += f'...\n\n{max_score_users}/{len(scoreboard)} alvebetjenter har maks poeng'

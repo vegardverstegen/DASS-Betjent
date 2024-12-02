@@ -9,6 +9,7 @@ import yaml
 import json
 import re
 import os
+import requests
 
 
 def command(name, admin_only=False):
@@ -44,32 +45,13 @@ class DASSBetjent(discord.Client):
         self.event(self.on_message)
         self.event(self.on_message_edit)
 
-    async def api_request(self, path, method="GET"):
-        full_path = path if path.startswith("http") else f"https://dass.npst.no/.netlify/functions/{path}"
-        headers = {
-            "referrer": "https://dass.npst.no/",
-            "referrerPolicy": "strict-origin-when-cross-origin",
-            "mode": "cors",
-            "sec-fetch-dest": "empty",
-            "sec-fetch-mode": "cors",
-            "sec-fetch-site": "same-origin",
-        }
-        if self.profile is not None:
-            headers["authorization"] = f"Bearer {self.npst_token}"
-            headers["credentials"] = "include"
-
-        resp = await self.http_session.request(method, full_path, headers=headers)
-        resp_text = await resp.text()
-        if resp.status == 200:
-            try:
-                resp_json = json.loads(resp_text)
-            except json.JSONDecodeError:
-                logging.warning(f"Failed to parse JSON from request for {method} {path}")
-                return
-            else:
-                return resp_json
+    def api_request(self, path):
+        full_path = path if path.startswith("http") else f"https://intranett.npst.no/api/v1/{path}"
+        resp = requests.get(full_path)
+        if resp.status_code == 200:
+            return resp.json()
         else:
-            logging.warning(f"Request failed for {method} {path}")
+            logging.warning(f"Request failed for {full_path}")
 
     async def on_ready(self):
         self.logger.debug("Loading server configs")
@@ -225,7 +207,7 @@ class DASSBetjent(discord.Client):
 
     @command(name="score")
     async def score_command(self, msg: discord.Message, args):
-        scoreboard = (await self.api_request("scoreboard"))["result"]
+        scoreboard = (await self.api_request("scoreboard"))["data"]
         embed = await NPST_utils.get_scoreboard_embed(scoreboard, input_users=args)
         embed.set_footer(text=f"Etterspurt av {msg.author}")
         await msg.channel.send(embed=embed)
